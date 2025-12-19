@@ -1,0 +1,18 @@
+[package]
+name = "trigrams_from_regex"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex-syntax.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+arbitrary.workspace = true
+arbtest.workspace = true
+regex-syntax = { workspace = true, features = ["arbitrary"]}
+tracing-subscriber.workspace = true
+yare.workspace = true
+
+[lib]
+doctest = false

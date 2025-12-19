@@ -1,0 +1,25 @@
+[package]
+name = "grop"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap.workspace = true
+clap-verbosity-flag = { workspace = true, features = ["tracing"] }
+database.workspace = true
+database_queries.workspace = true
+directories.workspace = true
+grep.workspace = true
+humansize.workspace = true
+int.workspace = true
+memmap2.workspace = true
+query_eval.workspace = true
+regex.workspace = true
+regex-syntax.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+trigrams_from_regex.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true

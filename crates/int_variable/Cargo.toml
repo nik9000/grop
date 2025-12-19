@@ -1,0 +1,14 @@
+[package]
+name = "int_variable"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+int.workspace = true
+
+[dev-dependencies]
+arbtest.workspace = true
+yare.workspace = true
+
+[lib]
+doctest = false

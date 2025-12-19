@@ -1,0 +1,16 @@
+[package]
+name = "database_queries"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+database.workspace = true
+int.workspace = true
+query_eval.workspace = true
+tracing.workspace = true
+trigrams_from_regex.workspace = true
+
+[dev-dependencies]
+yare.workspace = true
+tracing-subscriber.workspace = true
+regex-syntax.workspace = true

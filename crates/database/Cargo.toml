@@ -1,0 +1,17 @@
+[package]
+name = "database"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+
+int.workspace = true
+int_always_ascending.workspace = true
+int_variable.workspace = true
+
+[dev-dependencies]
+
+[lib]
+doctest = false

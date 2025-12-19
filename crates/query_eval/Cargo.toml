@@ -1,0 +1,9 @@
+[package]
+name = "query_eval"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+int.workspace = true
+int_always_ascending.workspace = true
+int_variable.workspace = true
