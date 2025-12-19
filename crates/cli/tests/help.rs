@@ -35,9 +35,11 @@ Arguments:
   <FILE>     File to search in
 
 Options:
-  -v, --verbose...  Increase logging verbosity
-  -q, --quiet...    Decrease logging verbosity
-  -h, --help        Print help
+  -b, --chunk-bytes <CHUNK_BYTES>  Chunk target byte size [default: 128KiB]
+  -v, --verbose...                 Increase logging verbosity
+  -l, --chunk-lines <CHUNK_LINES>  Chunk target line count [default: 1000000]
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
 "#,
   );
 }
@@ -53,9 +55,11 @@ Arguments:
   <FILE>  File who's database to build
 
 Options:
-  -v, --verbose...  Increase logging verbosity
-  -q, --quiet...    Decrease logging verbosity
-  -h, --help        Print help
+  -b, --chunk-bytes <CHUNK_BYTES>  Chunk target byte size [default: 128KiB]
+  -v, --verbose...                 Increase logging verbosity
+  -l, --chunk-lines <CHUNK_LINES>  Chunk target line count [default: 1000000]
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
 "#,
   );
 }
@@ -72,9 +76,11 @@ Arguments:
   <FILE>     File to search in
 
 Options:
-  -v, --verbose...  Increase logging verbosity
-  -q, --quiet...    Decrease logging verbosity
-  -h, --help        Print help
+  -b, --chunk-bytes <CHUNK_BYTES>  Chunk target byte size [default: 128KiB]
+  -v, --verbose...                 Increase logging verbosity
+  -l, --chunk-lines <CHUNK_LINES>  Chunk target line count [default: 1000000]
+  -q, --quiet...                   Decrease logging verbosity
+  -h, --help                       Print help
 "#,
   );
 }

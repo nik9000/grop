@@ -1,6 +1,5 @@
-use super::Error;
+use super::{args, Error};
 use database::DatabaseBuilder;
-use directories::BaseDirs;
 use humansize::{BINARY, format_size};
 use memmap2::Mmap;
 use std::{
@@ -13,18 +12,14 @@ use tracing::{Level, event, span};
 
 use database::DatabaseRef;
 
-const LINES_PER_CHUNK: u32 = 128 * 1024;
-const BYTES_PER_CHUNK: u32 = 128 * 1024;
-
-pub(crate) fn run(file: String) -> Result<(), Error> {
+pub(crate) fn run(file: String, db_args: args::Db) -> Result<(), Error> {
   let span = span!(Level::TRACE, "run");
   let _guard = span.enter();
 
-  let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
   let (path, file) = crate::target_file::open(file)?;
   let file_metadata = fs::metadata(&path)?;
 
-  let db = crate::db::make(&directories, &path, &file)?;
+  let db = crate::db::make(&path, &file, db_args)?;
   let db_len = db.len();
   let db_len_percent = (db_len as f64) / (file_metadata.size() as f64) * 100.0;
 
@@ -55,10 +50,11 @@ pub(crate) fn run(file: String) -> Result<(), Error> {
   Ok(())
 }
 
-pub(crate) fn make(directories: &BaseDirs, path: &PathBuf, file: &File) -> Result<Mmap, Error> {
+pub(crate) fn make(path: &PathBuf, file: &File, db_args: args::Db) -> Result<Mmap, Error> {
   let span = span!(Level::TRACE, "make");
   let _guard = span.enter();
 
+  let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
   let mut db = directories.data_local_dir().to_path_buf();
   db.push("grop");
   db.push("db");
@@ -84,8 +80,8 @@ pub(crate) fn make(directories: &BaseDirs, path: &PathBuf, file: &File) -> Resul
     let mut writer = File::create_new(&db)?;
     DatabaseBuilder::from_lines(
       &mut io::BufReader::new(file),
-      LINES_PER_CHUNK,
-      BYTES_PER_CHUNK,
+      db_args.chunk_lines,
+      db_args.chunk_bytes.0 as u32,
     )?
     .write(&mut writer)?;
   }

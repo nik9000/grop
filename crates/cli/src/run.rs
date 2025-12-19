@@ -1,4 +1,4 @@
-use super::Error;
+use super::{args, Error};
 use database::DatabaseRef;
 use database_queries::Meta;
 use std::io::{Read, Seek};
@@ -10,13 +10,14 @@ use grep::regex::RegexMatcher;
 use grep::searcher::sinks::UTF8;
 use grep::searcher::{Searcher, SearcherBuilder};
 
-pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
+pub(crate) fn run(pattern: String, file: String, db_args: args::Db) -> Result<(), Error> {
   let span = span!(Level::TRACE, "run");
   let _guard = span.enter();
 
   crate::query::query(
     pattern,
     file,
+    db_args,
     Box::new(|| Ok(())),
     Box::new(|file, pattern| match_all(file, pattern)),
     Box::new(|query, db, file, pattern| match_some(query, db, file, pattern)),

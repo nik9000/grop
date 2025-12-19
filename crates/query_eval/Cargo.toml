@@ -7,3 +7,6 @@ edition = "2024"
 int.workspace = true
 int_always_ascending.workspace = true
 int_variable.workspace = true
+
+[lib]
+doctest = false

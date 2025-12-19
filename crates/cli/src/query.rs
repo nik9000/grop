@@ -1,17 +1,18 @@
-use super::Error;
+use super::{args, Error};
 use database::DatabaseRef;
 use database_queries::Meta;
 use std::fs::File;
 use tracing::{Level, event, span};
 use trigrams_from_regex::{Query, trigrams};
 
-pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
+pub(crate) fn run(pattern: String, file: String, db_args: args::Db) -> Result<(), Error> {
   let span = span!(Level::TRACE, "run");
   let _guard = span.enter();
 
   query(
     pattern,
     file,
+    db_args,
     Box::new(|| {
       println!("regex query matches no chunks");
       Ok(())
@@ -27,13 +28,13 @@ pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
 pub(crate) fn query(
   pattern: String,
   file: String,
+  db_args: args::Db,
   match_none: Box<dyn FnOnce() -> Result<(), Error>>,
   match_all: Box<dyn FnOnce(&File, &str) -> Result<(), Error>>,
   match_some: Box<
     dyn FnOnce(Query<'_, Meta<'_>>, DatabaseRef<'_>, &File, &str) -> Result<(), Error>,
   >,
 ) -> Result<(), Error> {
-  let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
   let regex = regex_syntax::parse(&pattern)?;
 
   let (path, file) = crate::target_file::open(file)?;
@@ -49,7 +50,7 @@ pub(crate) fn query(
   }
   event!(Level::DEBUG, "regex {trigrams:#?}");
 
-  let db = crate::db::make(&directories, &path, &file)?;
+  let db = crate::db::make(&path, &file, db_args)?;
   // NOCOMMIT if the file has an error, rebuild it.
   let db = DatabaseRef::from(&db[..]).map_err(|e| Error::DatabaseReadError(format!("{}", e)))?;
   let query = database_queries::rewrite(&db, trigrams);
