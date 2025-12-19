@@ -37,7 +37,7 @@ impl ChunkInventoryBuilder {
 /// end_of_first as u32
 /// end_of_second as u32
 /// ...
-/// send_of_n as u32
+/// end_of_n as u32
 /// list_0
 /// list_1
 /// ...

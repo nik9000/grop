@@ -42,11 +42,11 @@ pub(crate) fn run(file: String) -> Result<(), Error> {
   println!("                 chunks: {chunk_count}");
   println!("               trigrams: {trigram_count}");
   println!("              file size: {file_size}");
-  println!("                db size: {db_size} ({db_len_percent:.2}% of file)");
-  println!("      trigrams map size: {trigr_map_size} ({trigr_map_percent:.2}% of db)");
-  println!("trigrams inventory size: {trigr_inv_size} ({trigr_inv_percent:.2}% of db)");
-  println!("        chunk ends size: {chunk_end_size} ({chunk_end_percent:.2}% of db)");
-  println!(" chunk line counts size: {chunk_lin_size} ({chunk_lin_percent:.2}% of db)");
+  println!("                db size: {db_size:>10} ({db_len_percent:05.2}% of file)");
+  println!("      trigrams map size: {trigr_map_size:>10} ({trigr_map_percent:05.2}% of db)");
+  println!("trigrams inventory size: {trigr_inv_size:>10} ({trigr_inv_percent:05.2}% of db)");
+  println!("        chunk ends size: {chunk_end_size:>10} ({chunk_end_percent:05.2}% of db)");
+  println!(" chunk line counts size: {chunk_lin_size:>10} ({chunk_lin_percent:05.2}% of db)");
   Ok(())
 }
 
