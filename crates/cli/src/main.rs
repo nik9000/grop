@@ -32,9 +32,9 @@ fn main() {
     .init();
 
   let r = match args.command {
-    Command::Run { pattern, file } => run::run(pattern, file),
+    Command::Run(Full { pattern, file }) => run::run(pattern, file),
     Command::Db { file } => db::run(file),
-    Command::Query { pattern, file } => query::run(pattern, file),
+    Command::Query(Full { pattern, file }) => query::run(pattern, file),
   };
   if let Err(e) = r {
     eprintln!("{}", e);

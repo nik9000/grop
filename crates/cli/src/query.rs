@@ -20,9 +20,7 @@ pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
       println!("regex query matches all chunks");
       Ok(())
     }),
-    Box::new(|query, db, _, _| {
-      match_some(query, db)
-    }),
+    Box::new(|query, db, _, _| match_some(query, db)),
   )
 }
 
@@ -72,12 +70,9 @@ pub(crate) fn query(
   }
 }
 
-fn match_some(
-  query: Query<'_, Meta<'_>>,
-  db: DatabaseRef<'_>,
-) -> Result<(), Error> {
+fn match_some(query: Query<'_, Meta<'_>>, db: DatabaseRef<'_>) -> Result<(), Error> {
   println!("regex query {query:#?}");
-  let chunk_count= db.chunk_count();
+  let chunk_count = db.chunk_count();
   let mut query = database_queries::eval(chunk_count as u64 - 1, query);
   let mut candidate_count = 0;
   let chunk_width = (chunk_count as f64).log10() as usize + 1;
@@ -95,9 +90,7 @@ fn match_some(
     let current = fixed_width(current, chunk_width);
     let start = fixed_width(start, offset_width);
     let end = fixed_width(end, offset_width);
-    println!(
-      "candidate chunk: {current}/{chunk_count}  {start} -> {end}",
-    );
+    println!("candidate chunk: {current}/{chunk_count}  {start} -> {end}",);
     candidate_count += 1;
   }
   let candidate_pct = (candidate_count as f64) / (chunk_count as f64) * 100.0;

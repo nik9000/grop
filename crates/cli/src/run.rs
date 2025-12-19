@@ -4,7 +4,7 @@ use database_queries::Meta;
 use std::io::{Read, Seek};
 use std::{fs::File, io};
 use tracing::{Level, event, span};
-use trigrams_from_regex::{Query};
+use trigrams_from_regex::Query;
 
 use grep::regex::RegexMatcher;
 use grep::searcher::sinks::UTF8;

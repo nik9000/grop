@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+bytesize.workspace = true
 clap.workspace = true
 clap-verbosity-flag = { workspace = true, features = ["tracing"] }
 database.workspace = true
