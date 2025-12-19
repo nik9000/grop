@@ -2,7 +2,8 @@ use std::io;
 
 use crate::ReadError;
 
-pub(crate) struct ChunkEndsBuilder { // NOCOMMIT rename me - it's just a u32 per chunk
+pub(crate) struct ChunkEndsBuilder {
+  // NOCOMMIT rename me - it's just a u32 per chunk
   ends: Vec<u32>,
 }
 

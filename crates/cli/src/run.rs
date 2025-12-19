@@ -6,8 +6,8 @@ use tracing::{Level, event, span};
 use trigrams_from_regex::{Query, trigrams};
 
 use grep::regex::RegexMatcher;
-use grep::searcher::{Searcher, SearcherBuilder};
 use grep::searcher::sinks::UTF8;
+use grep::searcher::{Searcher, SearcherBuilder};
 
 pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
   let span = span!(Level::TRACE, "run");
@@ -104,8 +104,7 @@ fn match_all(file: &File, pattern: &str) -> Result<(), Error> {
 }
 
 fn searcher() -> Searcher {
-  SearcherBuilder::new()
-    .build()
+  SearcherBuilder::new().build()
 }
 
 fn matcher(pattern: &str) -> RegexMatcher {

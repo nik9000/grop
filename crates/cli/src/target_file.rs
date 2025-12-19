@@ -1,5 +1,5 @@
 use super::Error;
-use std::io::{ErrorKind};
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::{fs::File, path};
 use tracing::{Level, span};

@@ -1,10 +1,15 @@
 use super::Error;
 use database::DatabaseBuilder;
 use directories::BaseDirs;
+use humansize::{BINARY, format_size};
 use memmap2::Mmap;
-use std::{fs::{self, File}, io, os::unix::fs::MetadataExt, path::{self, PathBuf}};
+use std::{
+  fs::{self, File},
+  io,
+  os::unix::fs::MetadataExt,
+  path::{self, PathBuf},
+};
 use tracing::{Level, event, span};
-use humansize::{format_size, BINARY};
 
 use database::DatabaseRef;
 
@@ -18,7 +23,7 @@ pub(crate) fn run(file: String) -> Result<(), Error> {
   let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
   let (path, file) = crate::target_file::open(file)?;
   let file_metadata = fs::metadata(&path)?;
-  
+
   let db = crate::db::make(&directories, &path, &file)?;
   let db_len = db.len();
   let db_len_percent = (db_len as f64) / (file_metadata.size() as f64) * 100.0;
