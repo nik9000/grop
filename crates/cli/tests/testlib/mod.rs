@@ -29,3 +29,9 @@ pub fn db() -> Command {
   cmd.arg("db");
   cmd
 }
+
+pub fn query() -> Command {
+  let mut cmd = cmd();
+  cmd.arg("query");
+  cmd
+}

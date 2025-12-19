@@ -1,9 +1,10 @@
 use super::Error;
 use database::DatabaseRef;
+use database_queries::Meta;
 use std::io::{Read, Seek};
 use std::{fs::File, io};
 use tracing::{Level, event, span};
-use trigrams_from_regex::{Query, trigrams};
+use trigrams_from_regex::{Query};
 
 use grep::regex::RegexMatcher;
 use grep::searcher::sinks::UTF8;
@@ -13,37 +14,35 @@ pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
   let span = span!(Level::TRACE, "run");
   let _guard = span.enter();
 
-  let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
-  let regex = regex_syntax::parse(&pattern)?;
+  crate::query::query(
+    pattern,
+    file,
+    Box::new(|| Ok(())),
+    Box::new(|file, pattern| match_all(file, pattern)),
+    Box::new(|query, db, file, pattern| match_some(query, db, file, pattern)),
+  )
+}
 
-  let (path, mut file) = crate::target_file::open(file)?;
+fn match_all(file: &File, pattern: &str) -> Result<(), Error> {
+  searcher().search_reader(
+    &matcher(pattern),
+    file,
+    UTF8(|lnum, line| {
+      let line = line.trim_end_matches(|c| c == '\r' || c == '\n');
+      print!("{lnum}:{line}");
+      Ok(true)
+    }),
+  )?;
+  Ok(())
+}
 
-  let trigrams = trigrams(&regex);
-  if matches!(trigrams, Query::MatchNone) {
-    event!(Level::DEBUG, "regex matches nothing");
-    return Ok(());
-  }
-  if matches!(trigrams, Query::MatchAll) {
-    event!(Level::DEBUG, "regex matches all trigrams");
-    return match_all(&file, &pattern);
-  }
-  event!(Level::DEBUG, "regex {trigrams:#?}");
-
-  let db = crate::db::make(&directories, &path, &file)?;
-  // NOCOMMIT if the file has an error, rebuild it.
-  let db = DatabaseRef::from(&db[..]).map_err(|e| Error::DatabaseReadError(format!("{}", e)))?;
-  let trigrams = database_queries::rewrite(&db, trigrams);
-  if matches!(trigrams, Query::MatchNone) {
-    event!(Level::DEBUG, "rewritten regex matches nothing");
-    return Ok(());
-  }
-  if matches!(trigrams, Query::MatchAll) {
-    event!(Level::DEBUG, "rewritten regex matches all trigrams");
-    return match_all(&file, &pattern);
-  }
-  event!(Level::DEBUG, "rewritten regex {trigrams:#?}");
-
-  let mut trigrams = database_queries::eval(db.chunk_count() as u64 - 1, trigrams);
+fn match_some(
+  query: Query<'_, Meta<'_>>,
+  db: DatabaseRef<'_>,
+  mut file: &File,
+  pattern: &str,
+) -> Result<(), Error> {
+  let mut trigrams = database_queries::eval(db.chunk_count() as u64 - 1, query);
   let mut searcher = searcher();
   let matcher = matcher(&pattern);
   let mut buffer = vec![];
@@ -87,19 +86,6 @@ pub(crate) fn run(pattern: String, file: String) -> Result<(), Error> {
       }),
     )?;
   }
-  Ok(())
-}
-
-fn match_all(file: &File, pattern: &str) -> Result<(), Error> {
-  searcher().search_reader(
-    &matcher(pattern),
-    file,
-    UTF8(|lnum, line| {
-      let line = line.trim_end_matches(|c| c == '\r' || c == '\n');
-      print!("{lnum}:{line}");
-      Ok(true)
-    }),
-  )?;
   Ok(())
 }
 

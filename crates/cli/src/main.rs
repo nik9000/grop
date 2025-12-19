@@ -1,5 +1,6 @@
 mod args;
 mod db;
+mod query;
 mod run;
 mod target_file;
 
@@ -33,6 +34,7 @@ fn main() {
   let r = match args.command {
     Command::Run { pattern, file } => run::run(pattern, file),
     Command::Db { file } => db::run(file),
+    Command::Query { pattern, file } => query::run(pattern, file),
   };
   if let Err(e) = r {
     eprintln!("{}", e);

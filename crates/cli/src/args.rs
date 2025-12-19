@@ -26,4 +26,11 @@ pub(crate) enum Command {
     /// File who's database to build.
     file: String,
   },
+  /// List candidate chunks for PATTERN in FILE.
+  Query {
+    /// Pattern to search for.
+    pattern: String,
+    /// File to search in.
+    file: String,
+  },
 }
