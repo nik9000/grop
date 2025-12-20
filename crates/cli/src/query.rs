@@ -1,4 +1,4 @@
-use super::{args, Error};
+use super::{Error, args};
 use database::DatabaseRef;
 use database_queries::Meta;
 use std::fs::File;
@@ -50,7 +50,7 @@ pub(crate) fn query(
   }
   event!(Level::DEBUG, "regex {trigrams:#?}");
 
-  let db = crate::db::make(&path, &file, db_args)?;
+  let db = crate::db::open_or_build(&path, &file, db_args)?;
   // NOCOMMIT if the file has an error, rebuild it.
   let db = DatabaseRef::from(&db[..]).map_err(|e| Error::DatabaseReadError(format!("{}", e)))?;
   let query = database_queries::rewrite(&db, trigrams);

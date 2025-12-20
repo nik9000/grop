@@ -1,4 +1,4 @@
-use super::{args, Error};
+use super::{Error, args};
 use database::DatabaseRef;
 use database_queries::Meta;
 use std::io::{Read, Seek};

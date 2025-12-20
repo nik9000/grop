@@ -1,25 +1,29 @@
-use super::{args, Error};
+use super::{Error, Result, args};
 use database::DatabaseBuilder;
 use humansize::{BINARY, format_size};
 use memmap2::Mmap;
 use std::{
-  fs::{self, File},
+  fs::{self, File, OpenOptions},
   io,
   os::unix::fs::MetadataExt,
   path::{self, PathBuf},
+  thread::sleep,
+  time::Duration,
 };
 use tracing::{Level, event, span};
 
 use database::DatabaseRef;
 
-pub(crate) fn run(file: String, db_args: args::Db) -> Result<(), Error> {
+const MAX_SLEEPS: u32 = 50;
+
+pub(crate) fn run(file: String, db_args: args::Db) -> Result<()> {
   let span = span!(Level::TRACE, "run");
   let _guard = span.enter();
 
   let (path, file) = crate::target_file::open(file)?;
   let file_metadata = fs::metadata(&path)?;
 
-  let db = crate::db::make(&path, &file, db_args)?;
+  let db = crate::db::open_or_build(&path, &file, db_args)?;
   let db_len = db.len();
   let db_len_percent = (db_len as f64) / (file_metadata.size() as f64) * 100.0;
 
@@ -50,10 +54,44 @@ pub(crate) fn run(file: String, db_args: args::Db) -> Result<(), Error> {
   Ok(())
 }
 
-pub(crate) fn make(path: &PathBuf, file: &File, db_args: args::Db) -> Result<Mmap, Error> {
+pub(crate) fn open_or_build(path: &PathBuf, file: &File, db_args: args::Db) -> Result<Mmap> {
   let span = span!(Level::TRACE, "make");
   let _guard = span.enter();
 
+  let (db, lock) = db_and_lock_files(path)?;
+
+  let mut db_dir = db.clone();
+  db_dir.pop();
+  fs::create_dir_all(db_dir)?;
+
+  let mut sleeps = 0;
+  loop {
+    let db_exists = db.exists();
+    let lock_exists = lock.exists();
+
+    if lock_exists {
+      backoff(&mut sleeps)?;
+      continue;
+    }
+    if db_exists {
+      event!(Level::DEBUG, "loading db at {}", db.to_string_lossy());
+      let read = File::open(&db)?;
+      return Ok(unsafe { memmap2::Mmap::map(&read) }?);
+    }
+
+    event!(Level::DEBUG, "taking lock");
+    if !touch(&lock)? {
+      backoff(&mut sleeps)?;
+      continue;
+    }
+
+    let build_db = build(&db, file, &db_args);
+    fs::remove_file(&lock)?;
+    build_db?;
+  }
+}
+
+fn db_and_lock_files(path: &PathBuf) -> Result<(PathBuf, PathBuf)> {
   let directories = directories::BaseDirs::new().ok_or(Error::NoHome)?;
   let mut db = directories.data_local_dir().to_path_buf();
   db.push("grop");
@@ -70,21 +108,40 @@ pub(crate) fn make(path: &PathBuf, file: &File, db_args: args::Db) -> Result<Mma
     db.push(c);
   }
 
-  let mut db_dir = db.clone();
-  db_dir.pop();
-  fs::create_dir_all(db_dir)?;
+  let lock = db.clone();
+  assert!(db.add_extension("lock"));
 
-  if db.exists() == false {
-    // TODO there's a race here. also with creation. we can fix it later
-    event!(Level::DEBUG, "creating db at {}", db.to_string_lossy());
-    let mut writer = File::create_new(&db)?;
-    DatabaseBuilder::from_lines(
-      &mut io::BufReader::new(file),
-      db_args.chunk_lines,
-      db_args.chunk_bytes.0 as u32,
-    )?
-    .write(&mut writer)?;
+  Ok((db, lock))
+}
+
+fn touch(path: &PathBuf) -> Result<bool> {
+  match OpenOptions::new().create_new(true).write(true).open(path) {
+    Ok(_) => Ok(true),
+    Err(e) => match e.kind() {
+      io::ErrorKind::AlreadyExists => Ok(false),
+      _ => Err(Error::IO(e)),
+    },
   }
-  let read = File::open(&db)?;
-  Ok(unsafe { memmap2::Mmap::map(&read) }?)
+}
+
+fn build(db: &PathBuf, file: &File, db_args: &args::Db) -> Result<()> {
+  event!(Level::DEBUG, "creating db at {}", db.to_string_lossy());
+  let mut writer = File::create_new(&db)?;
+  DatabaseBuilder::from_lines(
+    &mut io::BufReader::new(file),
+    db_args.chunk_lines,
+    db_args.chunk_bytes.0 as u32,
+  )?
+  .write(&mut writer)?;
+  Ok(())
+}
+
+fn backoff(sleeps: &mut u32) -> Result<()> {
+  event!(Level::DEBUG, "another process is building the db");
+  if *sleeps > MAX_SLEEPS {
+    return Err(Error::OtherProcessBuilder);
+  }
+  *sleeps += 1;
+  sleep(Duration::from_millis(100));
+  Ok(())
 }

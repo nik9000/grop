@@ -23,7 +23,11 @@ pub enum Error {
   DatabaseReadError(String),
   #[error(transparent)]
   DatabaseDecodeError(#[from] int::DecodeError),
+  #[error("db is being built by another process")]
+  OtherProcessBuilder,
 }
+
+type Result<T> = std::result::Result<T, Error>;
 
 fn main() {
   let args = args::Args::parse();
