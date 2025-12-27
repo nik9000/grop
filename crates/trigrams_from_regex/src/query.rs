@@ -21,6 +21,7 @@ impl<'a, M: Meta> Query<'a, M> {
       match q {
         Self::MatchAll => return Self::MatchAll,
         Self::MatchNone => {}
+        // TODO merge OR legs
         Self::And(_) | Self::Or(_) | Self::Trigram(_, _) => {
           collected.insert(q);
         }
@@ -41,6 +42,7 @@ impl<'a, M: Meta> Query<'a, M> {
       match q {
         Self::MatchAll => {}
         Self::MatchNone => return Self::MatchNone,
+        // TODO merge AND legs
         Self::And(_) | Self::Or(_) | Self::Trigram(_, _) => {
           collected.insert(q);
         }

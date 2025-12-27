@@ -108,8 +108,8 @@ fn db_and_lock_files(path: &PathBuf) -> Result<(PathBuf, PathBuf)> {
     db.push(c);
   }
 
-  let lock = db.clone();
-  assert!(db.add_extension("lock"));
+  let mut lock = db.clone();
+  assert!(lock.add_extension("lock"));
 
   Ok((db, lock))
 }
