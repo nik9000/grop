@@ -81,6 +81,8 @@ The `grep` crate is *very* fast. So fast that `grop` doesn't need to operate on 
 
 This massively decreases the size of the search index at the price of massive increases the number of false positive candidates. But, again, `grep` is really fast. And modern disks are fast. In other contexts this tradeoff won't make sense.
 
+This also means we don't see the query itself much in the flamegraphs. So I've not had to spend any time optimizing the query itself.
+
 ### Query pruning
 
 After converting the regex into a query tree, `grop` rewrites that tree against the search index, sprinkling in enough data so we can actually execute it. While it's there, it converts missing trigrams into `MatchNone` queries which it flows around the `And` and `Or` tree.
