@@ -99,11 +99,15 @@ After converting the regex into a query tree, `grop` rewrites that tree against 
 
 There's a lot more work to do here - some sequences are super dense and we'd be better off encoding what isn't in them. Or just using roaring bitmaps directly. Or something else. A place for further fun.
 
+### Memory Mapping
+
+`grop` memory maps the search index because that's simple and allows it to start very fast. The index is write-once and owned by `grop` itself. While this is `unsafe` in Rust terms, it's fairly safe. If there's a bug here, `grop` could core dump. Or just not work. That's a risk I'm willing to take.
+
 ## Prior art
 
 All of this is pretty traditional to be honest. If `grop` innovates at anything, it's using chunks and throwing them into the already fast `grep` crate.
 
-Look at the Wikipedia page for [Trigram search](https://en.wikipedia.org/wiki/Trigram_search) for some examples. The reference for [Google Code](https://swtch.com/~rsc/regexp/regexp4.html) talks about Shannon using n-grams in 1948 to analyze text. It also references a book called "Managing Gigabytes" which, I expect, uses very similar techniques.
+Look at the Wikipedia page for [Trigram search](https://en.wikipedia.org/wiki/Trigram_search) for some examples. The reference to [Google Code](https://swtch.com/~rsc/regexp/regexp4.html) talks about Shannon using n-grams in 1948 to analyze text. It also references a book called "Managing Gigabytes" which, I expect, uses very similar techniques.
 
 ## Simplifying assumptions
 
