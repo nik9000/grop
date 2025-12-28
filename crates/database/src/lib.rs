@@ -126,6 +126,10 @@ impl<'a> DatabaseRef<'a> {
     Some(self.inventory.get(chunk_list))
   }
 
+  pub fn chunks_containing_by_ord(&self, id: usize) -> ChunkListRef<'a> {
+    self.inventory.get(id)
+  }
+
   pub fn chunk_end_offset(&self, chunk: u32) -> u32 {
     self.chunk_end_offsets.get(chunk)
   }

@@ -51,6 +51,7 @@ pub(crate) fn run(file: String, db_args: args::Db) -> Result<()> {
   println!("trigrams inventory size: {trigr_inv_size:>10} ({trigr_inv_percent:05.2}% of db)");
   println!("        chunk ends size: {chunk_end_size:>10} ({chunk_end_percent:05.2}% of db)");
   println!(" chunk line counts size: {chunk_lin_size:>10} ({chunk_lin_percent:05.2}% of db)");
+  trigram_inventory_breakdown(&db);
   Ok(())
 }
 
@@ -144,4 +145,110 @@ fn backoff(sleeps: &mut u32) -> Result<()> {
   *sleeps += 1;
   sleep(Duration::from_millis(100));
   Ok(())
+}
+
+fn trigram_inventory_breakdown(db: &DatabaseRef<'_>) {
+  let total = db.trigram_count();
+  let total_bytes = db.inventory_size();
+  let mut in_1 = 0;
+  let mut lt_001_pct = 0;
+  let mut lt_005_pct = 0;
+  let mut lt_010_pct = 0;
+  let mut lt_020_pct = 0;
+  let mut lt_050_pct = 0;
+  let mut lt_080_pct = 0;
+  let mut lt_100_pct = 0;
+  let mut eq_100_pct = 0;
+  let mut in_1_bytes = 1;
+  let mut lt_001_pct_bytes = 0;
+  let mut lt_005_pct_bytes = 0;
+  let mut lt_010_pct_bytes = 0;
+  let mut lt_020_pct_bytes = 0;
+  let mut lt_050_pct_bytes = 0;
+  let mut lt_080_pct_bytes = 0;
+  let mut lt_100_pct_bytes = 0;
+  let mut eq_100_pct_bytes = 0;
+  for i in 0..total {
+    let chunks = db.chunks_containing_by_ord(i);
+    let bytes = chunks.byte_count();
+    let count = chunks.into_iter().count();
+    if count == 1 {
+      in_1 += 1;
+      in_1_bytes += bytes;
+      continue;
+    }
+    let count = count as f64;
+    let pct = count / db.chunk_count() as f64;
+    if pct < 0.01 {
+      lt_001_pct += 1;
+      lt_001_pct_bytes += bytes;
+    } else if pct < 0.05 {
+      lt_005_pct += 1;
+      lt_005_pct_bytes += bytes;
+    } else if pct < 0.10 {
+      lt_010_pct += 1;
+      lt_010_pct_bytes += bytes;
+    } else if pct < 0.20 {
+      lt_020_pct += 1;
+      lt_020_pct_bytes += bytes;
+    } else if pct < 0.50 {
+      lt_050_pct += 1;
+      lt_050_pct_bytes += bytes;
+    } else if pct < 0.80 {
+      lt_080_pct += 1;
+      lt_080_pct_bytes += bytes;
+    } else if pct < 1.0 {
+      lt_100_pct += 1;
+      lt_100_pct_bytes += bytes;
+    } else {
+      eq_100_pct += 1;
+      eq_100_pct_bytes += bytes;
+    }
+  }
+  let in_1_pct = in_1 as f64 / total as f64 * 100.0;
+  let lt_001_pct_pct = lt_001_pct as f64 / total as f64 * 100.0;
+  let lt_005_pct_pct = lt_005_pct as f64 / total as f64 * 100.0;
+  let lt_010_pct_pct = lt_010_pct as f64 / total as f64 * 100.0;
+  let lt_020_pct_pct = lt_020_pct as f64 / total as f64 * 100.0;
+  let lt_050_pct_pct = lt_050_pct as f64 / total as f64 * 100.0;
+  let lt_080_pct_pct = lt_080_pct as f64 / total as f64 * 100.0;
+  let lt_100_pct_pct = lt_100_pct as f64 / total as f64 * 100.0;
+  let eq_100_pct_pct = eq_100_pct as f64 / total as f64 * 100.0;
+  let in_1_bytes_pct = in_1_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_001_pct_bytes_pct = lt_001_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_005_pct_bytes_pct = lt_005_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_010_pct_bytes_pct = lt_010_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_020_pct_bytes_pct = lt_020_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_050_pct_bytes_pct = lt_050_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_080_pct_bytes_pct = lt_080_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let lt_100_pct_bytes_pct = lt_100_pct_bytes as f64 / total_bytes as f64 * 100.0;
+  let eq_100_pct_bytes_pct = eq_100_pct_bytes as f64 / total_bytes as f64 * 100.0;
+
+  println!(
+    "    trigrams in 1 chunk: {in_1:>10} ({in_1_pct:05.2}% of inventory) ({in_1_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <001%: {lt_001_pct:>10} ({lt_001_pct_pct:05.2}% of inventory) ({lt_001_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <005%: {lt_005_pct:>10} ({lt_005_pct_pct:05.2}% of inventory) ({lt_005_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <010%: {lt_010_pct:>10} ({lt_010_pct_pct:05.2}% of inventory) ({lt_010_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <020%: {lt_020_pct:>10} ({lt_020_pct_pct:05.2}% of inventory) ({lt_020_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <050%: {lt_050_pct:>10} ({lt_050_pct_pct:05.2}% of inventory) ({lt_050_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <080%: {lt_080_pct:>10} ({lt_080_pct_pct:05.2}% of inventory) ({lt_080_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in <100%: {lt_100_pct:>10} ({lt_100_pct_pct:05.2}% of inventory) ({lt_100_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
+  println!(
+    "      trigrams in =100%: {eq_100_pct:>10} ({eq_100_pct_pct:05.2}% of inventory) ({eq_100_pct_bytes_pct:05.2}% of inventory bytes)"
+  );
 }
